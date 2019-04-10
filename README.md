@@ -1,2 +1,2 @@
 # lncRNA-pipeline
-lncRNA pipeline
+lncRNA pipeline project
