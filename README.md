@@ -1,2 +1,3 @@
-# lncRNA-pipeline
-lncRNA pipeline project
+## lncRNA-pipeline
+
+Preparing for lncRNA pipeline project 
