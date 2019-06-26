@@ -55,14 +55,14 @@ if ($step == 2) {
 		print FR "gtf2bed $fileter/filter1.gtf >$fileter/filter1.bed && " ;
 		print FR "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/extract_long_and_filter_exon.pl $fileter/filter1.bed && ";
 		print FR "bedtools getfasta -fi $ref/ref.fa -bed $fileter/filter2.bed -fo $fileter/filter2.fa -name -split && ";
-##orf
+		##orf
 		print FR "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/extract_longorf.pl --input $fileter/filter2.fa > $fileter/filter2.getorf.list && ";
 		print FR " awk \'(\$2>300){print \$1}\' $fileter/filter2.getorf.list > $fileter/filter2.longorf.list && ";
 		print FR "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/filter_gene_list.pl $fileter/filter2.longorf.list $fileter/filter2.bed $fileter/filter3.bed && ";
 		print FR "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/extract_GTF_isoform.pl $fileter/filter1.gtf $fileter/filter3.bed $fileter/filter3.gtf && ";
 		print FR "gffread -g $ref/ref.fa $fileter/filter3.gtf -w $fileter/filter3.fa && ";
 		print FR "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/seq2protein.pl $fileter/filter3.fa > $fileter/filter3.aa.fa && ";
-		print FR "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/filter_gene_list.pl $fout/known.lncRNA.list  $fileter/filter3.bed $fileter/filter4.bed && ";
+		print FR "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/filter_gene_list.pl $lnc/known.lncRNA.list  $fileter/filter3.bed $fileter/filter4.bed && ";
 		print FR "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/extract_GTF_isoform.pl $fileter/filter1.gtf $fileter/filter4.bed $fileter/filter4.gtf ";
 		close FR;
 	}else{
@@ -90,22 +90,37 @@ if ($step == 4) {
 		my $fil=basename($caif);
 		my ($name,undef)=split/\./,$fil;
 		my $sh="/mnt/ilustre/users/caiping.shi/software/cpc-0.9-r2/bin/run_predict.sh";
-		print CP2 "mkdir -p $cpc/$name && cd $cpc/$name && $sh $fileter/filter3.fa cpc_result $cpc/$name && ";
-		print CP2 "cat $cpc/*/cpc_result > $cpc/total_cpc_result && less total_cpc_result |grep \"noncoding\" |awk \'{print $1}\' > $cpc/CPC_filter_result";
+		print CP2 "mkdir -p $cpc/$name && cd $cpc/$name && $sh $fileter/$name.fa $cpc/$name/cpc_result $cpc/$name \n";
 	}
+	#
 	close CP2;
 	my $job="qsub-slurm.pl  --Queue $queue  $wsh/cpc2.sh";
 	`$job`;
 	$step++ if ($step ne $stop);
 }
-##CNCI 
+
 if ($step == 5) {
+	open CP3,">$wsh/cpc3.sh";
+	print CP3 "cat $cpc/*/cpc_result > $cpc/total_cpc_result && less $cpc/total_cpc_result |grep \"noncoding\" |awk \'{print $1}\' > $cpc/CPC_filter_result";
+	close CP3;
+	my $job="qsub-slurm.pl  --Queue $queue  $wsh/cpc3.sh";
+	`$job`;
+	$step++ if ($step ne $stop);
+}
+
+##CNCI 
+if ($step == 6) {
 	$cnci="$lnc/novel/cnci";
 	mkdir $cnci if (!-d $cnci);
 	open SH,">$wsh/cnci.sh";
 	my $CN="/mnt/ilustre/centos7users/meng.luo/Pipeline/RNA/CNCI_package/";
-	print SH "cd $cnci && cp $CN $cnci && python CNCI_package/CNCI.py -f $fileter/filter3.fa -o CNCI -m ve -p 8 ";
+	print SH "cd $cnci && cp -r $CN $cnci && python ./CNCI_package/CNCI.py -f $fileter/filter3.fa -o CNCI -m ve -p 8 ";
 	close SH;
+	my $job="qsub-slurm.pl  --Queue $queue  $wsh/cnci.sh";
+	`$job`;
+	$step++ if ($step ne $stop);
+}
+if ($step == 7) {
 	open In,"<$cnci/CNCI/CNCI.index";
 	open Out,">$cnci/CNCI/CNCI_filter_result";
 	while (<In>) {
@@ -116,20 +131,18 @@ if ($step == 5) {
 	}
 	close In;
 	close Out;
-	my $job="qsub-slurm.pl  --Queue $queue  $wsh/cnci.sh";
-	`$job`;
 	$step++ if ($step ne $stop);
 }
 ##PfamScan
-if ($step == 6) {
+if ($step == 8) {
 	$Pfam="$lnc/novel/PfamScan";
 	mkdir $Pfam if (!-d $Pfam);
 ##more time
 #$Pfam=ABSOLUTE_DIR($Pfam);
-	open PF,">$Pfam/Pfam.sh";
+	open PF,">$wsh/Pfam.sh";
 	my $pfa="/mnt/ilustre/centos7users/meng.luo/Pipeline/RNA/PfamScan/pfam_scan.pl";
 	my $db="/mnt/ilustre/centos7users/meng.luo/Pipeline/RNA/PfamScan/pfam_db/";
-	print PF "perl -dir $db -outfile $Pfam/pfamscan_result -pfamB -fasta $fileter/filter3.aa.fa -cpu 8 && ";
+	print PF "perl $pfa -dir $db -outfile $Pfam/pfamscan_result -pfamB -fasta $fileter/filter3.aa.fa -cpu 8 && ";
 	##no spplit
 	##`cat */pfamscan_result | grep TCON > total_PfamScan_result`;
 	my $se="/mnt/ilustre/users/caiping.shi/script/lncRNA/pfam_select.pl ";
@@ -137,11 +150,11 @@ if ($step == 6) {
 	print PF "less $Pfam/PfamScan_result_1 | awk \'{print \$1}\' | awk -F \"-\" \'{print \$1}\' | sort | uniq > $Pfam/PfamScan_signicant_list && ";
 	print PF "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/filter_list.pl $fileter/filter3.bed $Pfam/PfamScan_signicant_list $Pfam/PfamScan_filter_result ";
 	close PF;
-	my $job="qsub-slurm.pl  --Queue $queue  $Pfam/Pfam.sh";
+	my $job="qsub-slurm.pl  --Queue $queue $wsh/Pfam.sh";
 	`$job`;
 	$step++ if ($step ne $stop);
 }
-if ($step == 7) {
+if ($step == 9) {
 	my $venn="$lnc/novel/venn";
 	mkdir $venn if (!-d $venn);
 	my $tool="RNAseq_ToolBox_v1410 venn";
