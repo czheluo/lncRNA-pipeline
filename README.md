@@ -1,3 +1,3 @@
-## lncRNA-pipeline
+## Reference (lncRNA-pipeline)
 
-Preparing for lncRNA pipeline project 
+[lncRNA-Pipeline]("Fig/LncRNA-analysis-pipeline-UPDATED.png") 
