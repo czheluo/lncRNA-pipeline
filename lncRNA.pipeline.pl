@@ -6,7 +6,6 @@ use Getopt::Long;
 use Data::Dumper;
 use FindBin qw($Bin $Script);
 use File::Basename qw(basename dirname);
-my $BEGIN_TIME=time();
 my $version="1.0.0";
 my ($ref,$out,$stop,$step,$ncrna,$queue,$fq,$wsh,$rsem,$group);
 GetOptions(
@@ -39,7 +38,7 @@ if ($step == 1) {
 	print Log "Quality Control\n"; 
 	my $time = time();
 	print Log "########################################\n";
-	my $job="perl $Bin/bin/v1.0/fastp-QC.pl -fqlist $fq -outdir $out/01.QC -wsh $wsh -queue $queue";
+	my $job="perl $Bin/bin/v1.0/fastp-QC.pl -fqlist $fq -outdir $out/01.QC -queue $queue";
 	print Log "$job\n";
 	`$job`;
 	print Log "$job\tdone!\n";
@@ -91,7 +90,7 @@ if ($rsem) {
 	print Log "Done and elapsed time : ",time()-$time,"s\n";
 	print Log "########################################\n";
 }
-if ($step == 2) {
+if ($step == 3) {
 	print Log "########################################\n";
 	print Log "stringtie one and two\n"; 
 	my $time=time();
@@ -106,7 +105,7 @@ if ($step == 2) {
 	$step++ if ($step ne $stop);
 }
 
-if ($step == 3) {
+if ($step == 4) {
 	print Log "########################################\n";
 	print Log "lncRNA\n";
 	my $time=time();
@@ -120,7 +119,7 @@ if ($step == 3) {
 	print Log "########################################\n";
 	$step++ if ($step ne $stop);
 }
-if ($step == 4) {
+if ($step == 5) {
 	print Log "########################################\n";
 	print Log "lncRNA class\n";
 	my $time=time();
@@ -135,7 +134,7 @@ if ($step == 4) {
 	print Log "########################################\n";
 	$step++ if ($step ne $stop);
 }
-if ($step == 5) {
+if ($step == 6) {
 	print Log "########################################\n";
 	print Log "compare lncRNA with mRNA\n";
 	my $time=time();
@@ -148,7 +147,7 @@ if ($step == 5) {
 	print Log "########################################\n";
 	$step++ if ($step ne $stop);
 }
-if ($step == 6) {
+if ($step == 7) {
 	print Log "########################################\n";
 	print Log "lncRNA Family\n";
 	my $time=time();
@@ -163,7 +162,7 @@ if ($step == 6) {
 	print Log "########################################\n";
 	$step++ if ($step ne $stop);
 }
-if ($step == 7) {
+if ($step == 8) {
 	print Log "########################################\n";
 	print Log "diffexp_lnc\n";
 	my $time=time();
@@ -177,7 +176,7 @@ if ($step == 7) {
 	print Log "Done and elapsed time : ",time()-$time,"s\n";
 	print Log "########################################\n";
 }
-if ($step == 7) {
+if ($step == 9) {
 	print Log "########################################\n";
 	print Log "diffexp_mRNA\n";
 	my $time=time();
@@ -191,7 +190,7 @@ if ($step == 7) {
 	print Log "########################################\n";
 	$step++ if ($step ne $stop);
 }
-if ($step == 8) {
+if ($step == 10) {
 	print Log "########################################\n";
 	print Log "enrich mRNA \n";
 	my $time=time();
@@ -205,7 +204,7 @@ if ($step == 8) {
 	print Log "########################################\n";
 	$step++ if ($step ne $stop);
 }
-if ($step == 9) {
+if ($step == 11) {
 	print Log "########################################\n";
 	print Log "diffanno\n";
 	my $time=time();
@@ -219,7 +218,7 @@ if ($step == 9) {
 	print Log "########################################\n";
 	$step++ if ($step ne $stop);
 }
-if ($step == 10) {
+if ($step == 12) {
 	print Log "########################################\n";
 	print Log "pca\n";
 	my $time=time();
@@ -234,7 +233,7 @@ if ($step == 10) {
 	print Log "########################################\n";
 	$step++ if ($step ne $stop);
 }
-if ($step == 11) {
+if ($step == 13) {
 	print Log "########################################\n";
 	print Log "snp\n";
 	my $time=time();
@@ -251,7 +250,7 @@ if ($step == 11) {
 	$step++ if ($step ne $stop);
 }
 
-if ($step == 12) {
+if ($step == 14) {
 	print Log "########################################\n";
 	print Log "mRNA Alternative Splice\n";
 	my $time=time();
@@ -266,7 +265,7 @@ if ($step == 12) {
 	print Log "Done and elapsed time : ",time()-$time,"s\n";
 	print Log "########################################\n";
 }
-if ($step == 13) {
+if ($step == 15) {
 	print Log "########################################\n";
 	print Log "target (cis && trans)\n";
 	my $time=time();
@@ -280,7 +279,7 @@ if ($step == 13) {
 	print Log "########################################\n";
 	$step++ if ($step ne $stop);
 }
-if ($step == 13) {
+if ($step == 15) {
 	print Log "########################################\n";
 	print Log "target (cis && trans)\n";
 	my $time=time();
