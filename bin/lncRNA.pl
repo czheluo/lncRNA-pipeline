@@ -161,6 +161,10 @@ if ($step == 9) {
 	open LT,">$wsh/venn.sh";
 	print LT " $tool $cnci/CNCI/CNCI_filter_result,$cpc/CPC_filter_result,$Pfam/PfamScan_filter_result CNCI,CPC,PfamScan  $venn/advance_filter_venn && ";
 	print LT "awk -F \"\t)\" \'{if (\$2==1 && \$3==1 && \$4==1 && \$5==1) {print \$1}}\' $venn/advance_filter_venn.xls > $venn/advance_filter_list ";
+	print LT "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/select_gene_list.pl $venn/advance_filter_list $fileter/filter3.bed $fileter/filter4.bed &&";
+	print LT "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/extract_GTF_isoform.pl $fileter/filter1.gtf $venn/filter4.bed $fileter/filter4.gtf && ";
+	print LT "gffread -g $ref/ref.fa $venn/filter4.gtf -w $venn/filter4.fa ";
+	print LT "cat $lnc/known.lncRNA.list $venn/advance_filter_list > $lnc/lncRNA.list ";
 	close LT;
 	my $job="qsub-slurm.pl  --Queue $queue  $wsh/venn.sh";
 	`$job`;
