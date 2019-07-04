@@ -41,7 +41,7 @@ if ($step == 1) {
 		$gro{$go}=1;
 	}
 	close In;
-	open In,"<$fout/01.hisat-mapping/bam.list";
+	open In,"<$fout/02.hisat-mapping/bam.list";
 	open SH,">$wsh/stringtie.1.sh";
 	open GO,">$string/gtf.list";
 	while (<In>) {
@@ -76,21 +76,22 @@ if ($step == 2) {
 }
 my $str2;
 if ($step == 3) {
-	$str2="$fout/02.stringtie.second";
+	$str2="$fout/03.stringtie.second";
 	mkdir $str2 if (!-d $str2);
-	open In,"<$fout/01.hisat-mapping/hisat.list";
-	open SH,">$wsh/stringtie2.sh";
+	open In,"<$fout/02.hisat-mapping/hisat.list";
+	open SH,">$wsh/stringtie.2.sh";
 	my $n=1;
 	while (<In>) {
 		chomp;
 		my ($id,undef)=split/\s+/,$_,2;
-		print SH "mkdir -p $str2/$id && cd $str2/$id && stringtie -p 8 --rf -G $string/gffcomp.annotated.gtf -e -B -o $str2/$id/$id.gtf -l $id $fout/01.hisat-mapping//$id/$id.sorted.bam\n";
+		print SH "mkdir -p $str2/$id && cd $str2/$id && stringtie -p 8 --rf -G $string/gffcomp.annotated.gtf -e -B -o $str2/$id/$id.gtf -l $id $fout/02.hisat-mapping//$id/$id.sorted.bam\n";
 		$n++;
 	}
 	close In;
 	close SH;
 	my $job="qsub-slurm.pl  --Queue $queue --Resource mem=50G --CPU 8 $wsh/stringtie.2.sh";
 	`$job`;
+	$step++ if ($step ne $stop);
 }
 if ($step == 4) {
 	open SH,">$wsh/stringtie.exp.sh";
