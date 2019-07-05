@@ -10,7 +10,7 @@ use File::Basename qw(basename dirname);
 my $version="1.0.0";
 GetOptions(
 	"help|?" =>\&USAGE,
-	"norna:s"=>\$ncrna,
+	"ncrna:s"=>\$ncrna,
 	"out:s"=>\$fout,
 	"ref:s"=>\$ref,
 	"wsh:s"=>\$wsh,
@@ -19,13 +19,14 @@ GetOptions(
 	"stop:s"=>\$stop,
 			) or &USAGE;
 &USAGE unless ($fout);
+$queue ||="RNA";
 $ref=ABSOLUTE_DIR($ref);
 $wsh=ABSOLUTE_DIR($wsh);
 mkdir $fout if(!-d  $fout);
 $fout=ABSOLUTE_DIR($fout);
-my $lnc="$fout/03.lncRNA";
+my $lnc="$fout/04.lncRNA";
 mkdir $lnc if (!-d $lnc);
-$stringtie=ABSOLUTE_DIR("$fout/02.stringtie.first");
+$stringtie="$fout/03.stringtie.first";
 my $type ||="yes";
 $ncrna=ABSOLUTE_DIR($ncrna);
 my ($fileter,$cpc,$cnci,$Pfam,$venn);
@@ -33,10 +34,10 @@ $step||=1;
 $stop||=-1;
 if ($step == 1) {
 	if ($type eq "yes") {
-		`grep ">" $ncrna |egrep '3prime_overlapping_ncrna|ambiguous_orf|antisense|antisense_RNA|lincRNA|ncrna_host|non_coding|non_stop_decay|processed_transcript|retained_intron|sense_intronic|sense_overlapping|bidirectional_promoter_lncRNA|macro_lncRNA' | cut -d " " -f1  | sed 's/>//' >$lnc/known.lncRNA.list`;
+		`grep ">" $ncrna |egrep '3prime_overlapping_ncrna|ambiguous_orf|antisense|antisense_RNA|lincRNA|ncrna_host|non_coding|non_stop_decay|processed_transcript|retained_intron|sense_intronic|sense_overlapping|bidirectional_promoter_lncRNA|macro_lncRNA' | cut -d "." -f1  | sed 's/>//' >$lnc/known.lncRNA.list`;
 		open KW,">$wsh/known.sh";
-		print KW "python /mnt/ilustre/centos7users/dna/.env/RNA/filter_gtf_with_tid.py -g $stringtie/gffcomp.annotated.gtf -t $lnc/known.lncRNA.list -o $lnc/known.lncRNA.gtf && ";
-		print KW "gtf_to_fasta $lnc/known.lncRNA.gtf $ref/ref.fa $lnc/known.lncRNA.gtf.fa && ";
+		print KW "cd $lnc && python /mnt/ilustre/centos7users/dna/.env/RNA/filter_gtf_with_tid.py -g $stringtie/gffcomp.annotated.gtf -t $lnc/known.lncRNA.list -o $lnc/known.lncRNA.gtf && ";
+		print KW "cd $lnc && gtf_to_fasta $lnc/known.lncRNA.gtf $ref/ref.fa $lnc/known.lncRNA.gtf.fa && ";
 		print KW "cd $lnc && perl /mnt/ilustre/centos7users/dna/.env/RNA/handle_known_lncRNA.fa.pl ";
 		close KW;
 	}else{
@@ -53,7 +54,7 @@ if ($step == 2) {
 		open FR,">$wsh/fileter.sh";
 		print FR "python /mnt/ilustre/users/deqing.gu/myscripts/class_code_filter_gtf.py -i $stringtie/gffcomp.annotated.gtf -o $fileter/filter1.gtf -t iux && ";
 		print FR "gtf2bed $fileter/filter1.gtf >$fileter/filter1.bed && " ;
-		print FR "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/extract_long_and_filter_exon.pl $fileter/filter1.bed && ";
+		print FR "cd $fileter && perl /mnt/ilustre/users/caiping.shi/script/lncRNA/extract_long_and_filter_exon.pl $fileter/filter1.bed && ";
 		print FR "bedtools getfasta -fi $ref/ref.fa -bed $fileter/filter2.bed -fo $fileter/filter2.fa -name -split && ";
 		##orf
 		print FR "perl /mnt/ilustre/users/caiping.shi/script/lncRNA/extract_longorf.pl --input $fileter/filter2.fa > $fileter/filter2.getorf.list && ";
@@ -84,13 +85,14 @@ if ($step == 3) {
 	$step++ if ($step ne $stop);
 }
 if ($step == 4) {
+	$cpc="$lnc/novel/CPC";
 	my @caifen=glob("$cpc/chaifen*.fa");
 	open CP2,">$wsh/cpc2.sh";
 	foreach my $caif (@caifen) {
 		my $fil=basename($caif);
 		my ($name,undef)=split/\./,$fil;
 		my $sh="/mnt/ilustre/users/caiping.shi/software/cpc-0.9-r2/bin/run_predict.sh";
-		print CP2 "mkdir -p $cpc/$name && cd $cpc/$name && $sh $fileter/$name.fa $cpc/$name/cpc_result $cpc/$name \n";
+		print CP2 "mkdir -p $cpc/$name && cd $cpc/$name && $sh $cpc/$name.fa $cpc/$name/cpc_result $cpc/$name \n";
 	}
 	#
 	close CP2;
@@ -100,6 +102,7 @@ if ($step == 4) {
 }
 
 if ($step == 5) {
+	$cpc="$lnc/novel/CPC";
 	open CP3,">$wsh/cpc3.sh";
 	print CP3 "cat $cpc/*/cpc_result > $cpc/total_cpc_result && less $cpc/total_cpc_result |grep \"noncoding\" |awk \'{print $1}\' > $cpc/CPC_filter_result";
 	close CP3;
@@ -155,6 +158,9 @@ if ($step == 8) {
 	$step++ if ($step ne $stop);
 }
 if ($step == 9) {
+	$Pfam="$lnc/novel/PfamScan";
+	$cpc="$lnc/novel/CPC";
+	$cnci="$lnc/novel/cnci";
 	my $venn="$lnc/novel/venn";
 	mkdir $venn if (!-d $venn);
 	my $tool="RNAseq_ToolBox_v1410 venn";
@@ -198,12 +204,12 @@ Contact:        meng.luo\@majorbio.com;
 Script:			$Script
 Description:
 
-	eg: nohup perl $Script -norna ref/Mus_musculus.GRCm38.ncrna.fa -out ./ -ref ref/ -wsh work_sh/ &
+	eg: nohup perl $Script -ncrna ../ref/Homo_sapiens.GRCh38.ncrna.fa -out ./ -wsh work_sh/ -ref ../ref/ &
 	
 
 Usage:
   Options:
-	"norna:s"=>\$ncrna,
+	"ncrna:s"=>\$ncrna,
 	"out:s"=>\$fout,
 	"ref:s"=>\$ref,
 	"wsh:s"=>\$wsh,
