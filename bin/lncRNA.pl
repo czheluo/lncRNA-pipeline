@@ -92,7 +92,7 @@ if ($step == 4) {
 		my $fil=basename($caif);
 		my ($name,undef)=split/\./,$fil;
 		my $sh="/mnt/ilustre/users/caiping.shi/software/cpc-0.9-r2/bin/run_predict.sh";
-		print CP2 "mkdir -p $cpc/$name && cd $cpc/$name && $sh $cpc/$name.fa $cpc/$name/cpc_result $cpc/$name \n";
+		print CP2 "mkdir -p $cpc/$name && cd $cpc/$name && $sh $cpc/$name.fa cpc_result $cpc/$name \n";
 	}
 	#
 	close CP2;
