@@ -15,20 +15,18 @@ GetOptions(
 	"queue:s"=>\$queue,
 			) or &USAGE;
 &USAGE unless ($fout);
-my $pcar ="$fout/10.pca";
+my $pcar ="$fout/11.pca";
 mkdir $pcar if (!-d $pcar);
 mkdir $wsh if (!-d $wsh);
 $pcar=ABSOLUTE_DIR($pcar);
 $fout=ABSOLUTE_DIR($fout);
 $wsh=ABSOLUTE_DIR($wsh);
 open Out,">$wsh/10.pca.sh";
-my $cor="/mnt/ilustre/users/bingxu.liu/workspace/RNA_Pipeline_v16/script/sample_group.pearson.r";
-my $pca="/mnt/ilustre/users/bingxu.liu/workspace/RNA_Pipeline_v16/script/sample_pca_group.r";
-print Out "Rscript $cor $fout/05.cm_lnc_mRNA/mRNA.fpkm.xls  $pcar/cor.pdf $fout/group.list \n";
-print Out "Rscript $pca $fout/05.cm_lnc_mRNA/mRNA.fpkm.xls  $pcar/pca $fout/group.list";
+print Out "Rscript $Bin/bin/sample_group.pearson.r $fout/06.cm_lnc_mRNA/mRNA.fpkm.xls  $pcar/cor.pdf $fout/group.list \n";
+print Out "Rscript $Bin/bin/sample_pca_group.r $fout/06.cm_lnc_mRNA/mRNA.fpkm.xls  $pcar/pca $fout/group.list";
 close Out;
-#my $job="qsub-slurm.pl  --Queue $queue --Resource mem=10G  $wsh/10.pca.sh";
-#`$job`;
+my $job="qsub-slurm.pl  --Queue $queue --Resource mem=10G  $wsh/10.pca.sh";
+`$job`;
 #######################################################################################
 print STDOUT "\nDone. Total elapsed time : ",time()-$BEGIN_TIME,"s\n";
 #######################################################################################
