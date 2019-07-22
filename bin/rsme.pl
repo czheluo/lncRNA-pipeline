@@ -3,9 +3,9 @@ use strict;
 use warnings;
 my $BEGIN_TIME=time();
 use Getopt::Long;
-my ($fin,$fout,$ref,$wsh,$queue);
+my ($fin,$fout,$ref,$wsh,$queue,$step,$stop);
 use Data::Dumper;
-use FindBin qw($bin $Script);
+use FindBin qw($Bin $Script);
 use File::Basename qw(basename dirname);
 my $version="1.0.0";
 GetOptions(
@@ -14,30 +14,36 @@ GetOptions(
 	"wsh:s"=>\$wsh,
 	"queue:s"=>\$queue,
 	"ref:s"=>\$ref,
+	"step:s"=>\$step,
+	"stop:s"=>\$stop,
 			) or &USAGE;
-&USAGE unless ($fout and $fin);
-my $rsem=ABSOLUTE_DIR("$fout/12.rsem");
-$fin =ABSOLUTE_DIR("$fout/01.hisat_mapping/bam.list");
-mkdir $rsem if (!-d $rsem);
-$fout=ABSOLUTE_DIR($fout);
-$wsh=ABSOLUTE_DIR($wsh);
+&USAGE unless ($fout);
+$step||=1;
+$stop||=-1;
+$ref=ABSOLUTE_DIR($ref);
 mkdir $fout if (!-d $fout);
+$fout=ABSOLUTE_DIR($fout);
+my $rsem="$fout/rsem";
+$fin ="$fout/01.hisat-mapping/bam.list";
+mkdir $rsem if (!-d $rsem);
+$rsem=ABSOLUTE_DIR($rsem);
 mkdir $wsh if (!-d $wsh);
-my $rse="/mnt/ilustre/centos7users/meng.luo/Pipeline/RNA/Pipeline/rsem.sh";
-my $matrix="/mnt/ilustre/centos7users/meng.luo/Pipeline/RNA/Pipeline/abundance_estimates_to_matrix.pl";
+$wsh=ABSOLUTE_DIR($wsh);
+my $rse="/mnt/ilustre/centos7users/meng.luo/Pipeline/RNA/Pipeline/bin/rsem.sh";
+my $matrix="/mnt/ilustre/centos7users/meng.luo/Pipeline/RNA/Pipeline/bin/abundance_estimates_to_matrix.pl";
 if ($step == 1) {
 	open In,$fin;
-	open SH,">$wsh/rs1.sh";
-	print SH "rsem-prepare-reference  --gtf $ref/ref_genome.gtf $ref/ref.fa $rsem/rsem.gene --bowtie2 ";
+	open SH,">$wsh/rsem1.sh";
+	print SH "cd $rsem && rsem-prepare-reference  --gtf $ref/ref_genome.gtf $ref/ref.fa $rsem/rsem.gene --bowtie2 ";
 	close SH;
-	my $job="qsub-slurm.pl  --Queue $queue --Resource mem=10G $wsh/rs1.sh";
-	`$job`;
+	#my $job="qsub-slurm.pl  --Queue $queue --Resource mem=10G $wsh/rs1.sh";
+	#`$job`;
 	$step++ if ($step ne $stop);
 }
 
 if ($step == 2) {
-	open In,$fin;
-	open SH,">$wsh/rs2.sh";
+	open In,"<$fout/01.hisat-mapping/hisat.list";
+	open SH,">$wsh/rsem2.sh";
 	while (<In>) {
 		chomp;
 		my ($id,undef,$fq1,$fq2)=split/\s+/,$_;
@@ -45,14 +51,14 @@ if ($step == 2) {
 	}
 	close In;
 	close SH;
-	my $job="qsub-slurm.pl  --Queue $queue --Resource mem=10G --CPU 6 $wsh/rs2.sh";
-	`$job`;
+	#my $job="qsub-slurm.pl  --Queue $queue --Resource mem=10G --CPU 6 $wsh/rs2.sh";
+	#`$job`;
 	$step++ if ($step ne $stop);
 }
 
 if ($step == 3) {
-	open In,$fin;
-	open SH1,">$wsh/matrix.sh";
+	open In,"<$fout/01.hisat-mapping/hisat.list";
+	open SH1,">$wsh/rsem3.sh";
 	print SH1 "cd $rsem && $matrix --est_method RSEM ";
 	while (<In>) {
 		chomp;
@@ -62,8 +68,8 @@ if ($step == 3) {
 	print SH1 " --out_prefix rsem.gene";
 	close In;
 	close SH1;
-	my $job="qsub-slurm.pl  --Queue $queue --Resource mem=5G $wsh/matrix.sh";
-	`$job`;
+	#my $job="qsub-slurm.pl  --Queue $queue --Resource mem=5G $wsh/matrix.sh";
+	#`$job`;
 	$step++ if ($step ne $stop);
 }
 #######################################################################################
@@ -94,16 +100,18 @@ Contact:        meng.luo\@majorbio.com;
 Script:			$Script
 Description:
 
-	eg: perl -int filename -out filename 
+	eg: perl $Script -out ./ -wsh work_sh/ -ref ref
 	
 
 Usage:
   Options:
 	"help|?" =>\&USAGE,
-	"fqlist:s"=>\$fin,
 	"out:s"=>\$fout,
 	"wsh:s"=>\$wsh,
 	"queue:s"=>\$queue,
+	"ref:s"=>\$ref,
+	"step:s"=>\$step,
+	"stop:s"=>\$stop,
 	-h         Help
 
 USAGE
