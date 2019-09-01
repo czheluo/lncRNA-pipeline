@@ -323,7 +323,6 @@ sub ABSOLUTE_DIR #$pavfile=ABSOLUTE_DIR($pavfile);
 	chdir $cur_dir;
 	return $return;
 }
-
 sub USAGE {#
         my $usage=<<"USAGE";
 Contact:        meng.luo\@majorbio.com;
