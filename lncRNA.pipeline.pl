@@ -325,10 +325,11 @@ sub ABSOLUTE_DIR #$pavfile=ABSOLUTE_DIR($pavfile);
 }
 sub USAGE {#
         my $usage=<<"USAGE";
-Contact:        meng.luo\@majorbio.com;
+Contact:        czheluo\@gmail.com
 Script:		$Script
 Version:	$version
 Description:	
+	 perl $Script
 Usage:
   -ref		<dir>	input ref dir
   -group <file> input group list file 
